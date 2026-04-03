@@ -1,147 +1,151 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SilentBridge – Gesture Video Calls</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 </head>
 <body>
 
-<!-- ═══════════ LANDING PAGE ═══════════ -->
+<!-- ═══════════ LANDING ═══════════ -->
 <div id="page-landing" class="page active">
-  <div class="bg-blobs">
-    <div class="blob b1"></div>
-    <div class="blob b2"></div>
-    <div class="blob b3"></div>
-  </div>
+  <div class="bg-blobs"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
   <nav>
     <div class="logo">🤟 SilentBridge</div>
-    <button class="btn-outline" onclick="showPage('page-train')">Gestures Guide</button>
+    <button class="btn-outline" onclick="showPage('page-train')">Gesture Library</button>
   </nav>
   <div class="hero">
-    <div class="badge">✨ Free &amp; Open — No Training Needed</div>
+    <div class="badge">✨ Free — No Account Needed</div>
     <h1>Speak with your<br/><span class="accent">hands.</span></h1>
-    <p class="sub">A video call platform for people who can't speak.<br/>Your gestures become text — in real time.<br/>Works instantly with <b>built-in gestures</b> — no setup needed!</p>
+    <p class="sub">Video calls for people who can't speak.<br/>Upload hand gesture images — AI learns them instantly.<br/>Works for <b>everyone</b> who opens the site.</p>
     <div class="hero-btns">
       <button class="btn-primary" onclick="showPage('page-room')">Start a Call</button>
-      <button class="btn-ghost" onclick="showPage('page-train')">See All Gestures →</button>
+      <button class="btn-ghost" onclick="showPage('page-train')">Gesture Library →</button>
     </div>
     <div class="how-it-works">
-      <div class="step"><div class="step-icon">🤚</div><div>Do a gesture</div></div>
+      <div class="step"><div class="step-icon">🖼️</div><div>Upload gesture images</div></div>
       <div class="arrow">→</div>
-      <div class="step"><div class="step-icon">🧠</div><div>AI detects it</div></div>
+      <div class="step"><div class="step-icon">🧠</div><div>AI learns the hand shape</div></div>
       <div class="arrow">→</div>
-      <div class="step"><div class="step-icon">💬</div><div>Text appears</div></div>
+      <div class="step"><div class="step-icon">💬</div><div>Text shown in calls</div></div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════ GESTURES GUIDE PAGE ═══════════ -->
+<!-- ═══════════ GESTURE LIBRARY PAGE ═══════════ -->
 <div id="page-train" class="page">
-  <div class="bg-blobs">
-    <div class="blob b1"></div><div class="blob b2"></div>
-  </div>
+  <div class="bg-blobs"><div class="blob b1"></div><div class="blob b2"></div></div>
   <nav>
     <div class="logo" onclick="showPage('page-landing')" style="cursor:pointer">🤟 SilentBridge</div>
     <button class="btn-outline" onclick="showPage('page-room')">Start Call</button>
   </nav>
   <div class="train-container">
-    <h2>Gesture Guide</h2>
-    <p class="sub">These gestures work for <b>everyone automatically</b> — no training needed!<br/>You can also add your own custom gestures below.</p>
+    <h2>Gesture Library</h2>
+    <p class="sub">Upload images for each gesture. The more images per gesture, the more accurate it becomes.<br/>
+    <b>Tip:</b> Download gesture images from Google Images with "white background" for best results.</p>
 
-    <!-- Built-in Gestures Reference Card -->
-    <div class="builtin-section">
-      <div class="builtin-header">
-        <span class="builtin-badge">⚡ Built-in — Works Instantly</span>
-      </div>
-      <div class="builtin-grid">
-        <div class="builtin-item"><div class="bi-emoji">✋</div><div class="bi-label">Open Palm</div><div class="bi-meaning">Hello / Stop</div></div>
-        <div class="builtin-item"><div class="bi-emoji">✊</div><div class="bi-label">Fist</div><div class="bi-meaning">No</div></div>
-        <div class="builtin-item"><div class="bi-emoji">👍</div><div class="bi-label">Thumbs Up</div><div class="bi-meaning">Yes / Good</div></div>
-        <div class="builtin-item"><div class="bi-emoji">👎</div><div class="bi-label">Thumbs Down</div><div class="bi-meaning">No / Bad</div></div>
-        <div class="builtin-item"><div class="bi-emoji">☝️</div><div class="bi-label">Index Up</div><div class="bi-meaning">One moment</div></div>
-        <div class="builtin-item"><div class="bi-emoji">✌️</div><div class="bi-label">Peace / V</div><div class="bi-meaning">Peace / 2</div></div>
-        <div class="builtin-item"><div class="bi-emoji">🤙</div><div class="bi-label">Pinky Up</div><div class="bi-meaning">Call me</div></div>
-        <div class="builtin-item"><div class="bi-emoji">🤟</div><div class="bi-label">ILY Sign</div><div class="bi-meaning">I love you</div></div>
-        <div class="builtin-item"><div class="bi-emoji">🤘</div><div class="bi-label">Rock Sign</div><div class="bi-meaning">Rock on</div></div>
-        <div class="builtin-item"><div class="bi-emoji">4️⃣</div><div class="bi-label">4 Fingers</div><div class="bi-meaning">Four</div></div>
-        <div class="builtin-item"><div class="bi-emoji">3️⃣</div><div class="bi-label">3 Fingers</div><div class="bi-meaning">Three</div></div>
-        <div class="builtin-item"><div class="bi-emoji">👌</div><div class="bi-label">Thumb+Index</div><div class="bi-meaning">Okay</div></div>
-      </div>
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat-item"><div class="stat-num" id="stat-gestures">0</div><div class="stat-label">Gestures</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-samples">0</div><div class="stat-label">Total Images</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-ready">0%</div><div class="stat-label">Ready</div></div>
     </div>
 
-    <!-- Custom Gestures Section -->
-    <div class="custom-section-header">
-      <h3>➕ Add Your Own Custom Gestures <span style="font-size:0.8rem;font-weight:400;color:var(--text2)">(optional)</span></h3>
-      <p style="font-size:0.85rem;color:var(--text2);margin-top:4px">Want to add gestures with your own meaning? Upload a photo or use camera.</p>
+    <!-- Import / Export buttons -->
+    <div class="import-export-row">
+      <button class="btn-outline small-btn" onclick="document.getElementById('import-input').click()">📥 Import Gestures</button>
+      <input type="file" id="import-input" accept=".json" style="display:none" onchange="importGestures(event)"/>
+      <button class="btn-outline small-btn" onclick="GestureDB.exportToFile(); showToast('📥 Gestures exported!')">📤 Export Gestures</button>
+      <button class="btn-danger small-btn" onclick="clearAllGestures()">🗑️ Clear All</button>
     </div>
 
     <div class="train-card">
+      <!-- LEFT: Add Gesture -->
       <div class="train-inputs">
+        <h3 style="margin-bottom:16px;font-family:'Syne',sans-serif;font-size:1.1rem">➕ Add / Update a Gesture</h3>
+
         <div class="input-group">
-          <label>What does this gesture mean?</label>
-          <input type="text" id="gesture-label" placeholder="e.g. Thank you, Help me, Water, Bathroom" />
-        </div>
-        <div class="source-tabs">
-          <button class="tab active" id="tab-upload" onclick="switchTab('upload')">📁 Upload Photo</button>
-          <button class="tab" id="tab-camera" onclick="switchTab('camera')">📷 Live Camera</button>
+          <label>Gesture Label (what it means)</label>
+          <input type="text" id="gesture-label" placeholder="e.g. Hello, Yes, Thank you, Help, Water"/>
+          <div class="label-hint">If this label already exists, the new image is added as an extra sample — making it more accurate!</div>
         </div>
 
-        <!-- Upload Mode -->
-        <div id="mode-upload">
-          <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
-            <div class="drop-icon">🖼️</div>
-            <div>Click or drag a photo here</div>
-            <div class="drop-hint">Clear hand photo in good lighting</div>
+        <!-- Bulk Upload Zone -->
+        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+          <div class="drop-icon">🖼️</div>
+          <div class="drop-title">Click or drag images here</div>
+          <div class="drop-hint">You can upload MULTIPLE images at once for better accuracy<br/>PNG, JPG supported — white/plain background works best</div>
+        </div>
+        <input type="file" id="file-input" accept="image/*" multiple style="display:none" onchange="handleFileUpload(event)"/>
+
+        <!-- Preview of selected images -->
+        <div id="preview-area" style="display:none">
+          <div class="preview-header">
+            <span id="preview-count">0 images selected</span>
+            <button class="btn-ghost small" onclick="clearPreview()">✕ Clear</button>
           </div>
-          <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFileUpload(event)"/>
-          <img id="preview-img" class="preview-img" style="display:none"/>
+          <div id="preview-grid" class="preview-grid"></div>
         </div>
 
-        <!-- Camera Mode -->
+        <button class="btn-primary full-width" id="save-btn" onclick="saveGesture()">
+          💾 Save Gesture
+        </button>
+
+        <!-- Progress bar shown during processing -->
+        <div id="progress-wrap" style="display:none">
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+          <div class="progress-label" id="progress-label">Processing…</div>
+        </div>
+
+        <!-- Camera option -->
+        <div class="divider-text">or use live camera</div>
+        <div class="source-tabs">
+          <button class="tab" id="tab-camera" onclick="switchToCamera()">📷 Use Camera Instead</button>
+        </div>
         <div id="mode-camera" style="display:none">
           <div class="camera-wrap">
             <video id="train-video" autoplay playsinline muted></video>
             <canvas id="train-overlay" class="overlay-canvas"></canvas>
-            <div class="cam-hint" id="cam-hint">📸 Position your hand in frame</div>
+            <div class="cam-hint" id="cam-hint">📸 Show your hand gesture clearly</div>
           </div>
           <button class="btn-secondary" id="cam-btn" onclick="toggleCamera()">▶ Start Camera</button>
+          <button class="btn-outline" style="margin-top:8px;width:100%" onclick="captureFromCamera()">📸 Capture This Gesture</button>
         </div>
-
-        <button class="btn-primary full-width" onclick="saveGesture()">💾 Save Custom Gesture</button>
       </div>
 
-      <!-- Saved Custom Gestures -->
+      <!-- RIGHT: Gesture List -->
       <div class="gestures-list">
-        <h3>Your Custom Gestures <span id="gesture-count" class="count-badge">0</span></h3>
+        <h3 style="font-family:'Syne',sans-serif;font-size:1.1rem;margin-bottom:16px">
+          Saved Gestures <span id="gesture-count" class="count-badge">0</span>
+        </h3>
+
+        <input type="text" id="gesture-search" placeholder="🔍 Search gestures…" oninput="renderGesturesList()" style="margin-bottom:12px"/>
+
         <div id="gestures-grid"></div>
         <div id="empty-state" class="empty-state">
-          <div style="font-size:2rem">✨</div>
-          <div>Built-in gestures already work!</div>
-          <div style="font-size:0.75rem;margin-top:4px;color:var(--text2)">Add custom ones here if you need more</div>
+          <div style="font-size:2.5rem">🖼️</div>
+          <div style="font-weight:500;margin-top:8px">No gestures yet</div>
+          <div style="font-size:0.8rem;margin-top:6px;color:var(--text2)">
+            Download hand gesture images from Google Images<br/>
+            then upload them here with a label
+          </div>
         </div>
-        <button class="btn-danger" id="clear-btn" onclick="clearAllGestures()" style="display:none">🗑️ Clear Custom Gestures</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════ CALL / ROOM PAGE ═══════════ -->
+<!-- ═══════════ CALL PAGE ═══════════ -->
 <div id="page-room" class="page">
-  <div class="bg-blobs dark">
-    <div class="blob b1"></div><div class="blob b2"></div>
-  </div>
+  <div class="bg-blobs dark"><div class="blob b1"></div><div class="blob b2"></div></div>
   <nav class="nav-dark">
     <div class="logo" onclick="showPage('page-landing')" style="cursor:pointer">🤟 SilentBridge</div>
-    <div class="nav-center">
-      <span id="room-id-display" class="room-badge">No Room</span>
-    </div>
+    <div class="nav-center"><span id="room-id-display" class="room-badge">No Room</span></div>
     <button class="btn-outline" onclick="showPage('page-train')">Gestures</button>
   </nav>
 
-  <!-- Room Setup -->
   <div class="room-setup" id="room-setup">
     <h2>Join or Create a Room</h2>
     <p class="sub">Create a room and share the Room ID with the person you want to call.</p>
@@ -158,16 +162,14 @@
         <button class="btn-primary" onclick="joinRoom()">Join Room →</button>
       </div>
     </div>
-
     <div class="setup-steps">
       <div class="setup-step"><span class="step-num">1</span><span>Person A clicks <b>Create New Room</b> → gets a Room ID</span></div>
-      <div class="setup-step"><span class="step-num">2</span><span>Person A shares the Room ID via WhatsApp/text</span></div>
+      <div class="setup-step"><span class="step-num">2</span><span>Share Room ID via WhatsApp or text</span></div>
       <div class="setup-step"><span class="step-num">3</span><span>Person B enters Room ID → clicks <b>Join Room</b></span></div>
-      <div class="setup-step"><span class="step-num">4</span><span>Person A clicks <b>🤚 Gestures</b> → start signing!</span></div>
+      <div class="setup-step"><span class="step-num">4</span><span>Person A clicks <b>🤚 Gestures ON</b> → start signing!</span></div>
     </div>
   </div>
 
-  <!-- Active Call UI -->
   <div class="call-ui" id="call-ui" style="display:none">
     <div class="videos-area">
       <div class="video-box remote-box">
@@ -186,7 +188,6 @@
           </div>
         </div>
       </div>
-
       <div class="video-box local-box">
         <video id="local-video" autoplay playsinline muted></video>
         <canvas id="local-overlay" class="overlay-canvas"></canvas>
@@ -194,7 +195,6 @@
       </div>
     </div>
 
-    <!-- Gesture Text Display -->
     <div class="text-display">
       <div class="text-display-header">
         <span>💬 Detected Gesture</span>
@@ -204,7 +204,6 @@
       <div class="text-history" id="text-history"></div>
     </div>
 
-    <!-- Controls -->
     <div class="call-controls">
       <button class="ctrl-btn" id="btn-gesture" onclick="toggleGestureDetection()">🤚<span>Gestures</span></button>
       <button class="ctrl-btn" id="btn-cam" onclick="toggleCam()">📷<span>Camera</span></button>
@@ -213,7 +212,6 @@
   </div>
 </div>
 
-<!-- Toast -->
 <div id="toast" class="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
