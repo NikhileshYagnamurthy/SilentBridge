@@ -58,14 +58,14 @@ const Detector = {
   _onResults(results) {
     if (this.activeCanvas && this.activeVideo) {
       const ctx = this.activeCanvas.getContext('2d');
-      // Match canvas pixels to displayed size — fixes offset and enlargement bugs
       this.activeCanvas.width  = this.activeCanvas.offsetWidth  || 640;
       this.activeCanvas.height = this.activeCanvas.offsetHeight || 480;
       ctx.clearRect(0, 0, this.activeCanvas.width, this.activeCanvas.height);
       if (results.multiHandLandmarks) {
         for (const lm of results.multiHandLandmarks) {
-          drawConnectors(ctx, lm, HAND_CONNECTIONS, { color: '#7c6dfa', lineWidth: 2 });
-          drawLandmarks(ctx, lm, { color: '#6dfabc', lineWidth: 1, radius: 3 });
+          const mirrored = lm.map(p => ({ x: 1-p.x, y: p.y, z: p.z }));
+          drawConnectors(ctx, mirrored, HAND_CONNECTIONS, { color: '#7c6dfa', lineWidth: 2 });
+          drawLandmarks(ctx, mirrored, { color: '#6dfabc', lineWidth: 1, radius: 3 });
         }
       }
     }
