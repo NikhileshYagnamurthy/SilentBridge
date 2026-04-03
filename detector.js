@@ -58,19 +58,16 @@ const Detector = {
   _onResults(results) {
     if (this.activeCanvas && this.activeVideo) {
       const ctx = this.activeCanvas.getContext('2d');
-      this.activeCanvas.width  = this.activeVideo.videoWidth  || 640;
-      this.activeCanvas.height = this.activeVideo.videoHeight || 480;
+      // Match canvas pixels to displayed size — fixes offset and enlargement bugs
+      this.activeCanvas.width  = this.activeCanvas.offsetWidth  || 640;
+      this.activeCanvas.height = this.activeCanvas.offsetHeight || 480;
       ctx.clearRect(0, 0, this.activeCanvas.width, this.activeCanvas.height);
-      ctx.save();
-      ctx.scale(-1, 1);
-      ctx.translate(-this.activeCanvas.width, 0);
       if (results.multiHandLandmarks) {
         for (const lm of results.multiHandLandmarks) {
           drawConnectors(ctx, lm, HAND_CONNECTIONS, { color: '#7c6dfa', lineWidth: 2 });
           drawLandmarks(ctx, lm, { color: '#6dfabc', lineWidth: 1, radius: 3 });
         }
       }
-      ctx.restore();
     }
     if (!results.multiHandLandmarks || !results.multiHandLandmarks.length) return;
     const label = this._matchGesture(results.multiHandLandmarks[0]);
