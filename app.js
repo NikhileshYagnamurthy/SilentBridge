@@ -321,24 +321,18 @@ async function startTrainCamera() {
     await Detector.init();
     Detector.hands.onResults((results) => {
       const ctx = canvas.getContext('2d');
-      // Use raw video resolution for the canvas pixel buffer
-      canvas.width = vid.videoWidth || 640;
-      canvas.height = vid.videoHeight || 480;
+      // Match canvas pixels to displayed element size
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      // Mirror to match the mirrored camera view
-      ctx.save();
-      ctx.scale(-1, 1);
-      ctx.translate(-canvas.width, 0);
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         for (const lm of results.multiHandLandmarks) {
           drawConnectors(ctx, lm, HAND_CONNECTIONS, { color: '#7c6dfa', lineWidth: 2 });
           drawLandmarks(ctx, lm, { color: '#fa6d9a', radius: 4 });
         }
-        ctx.restore();
         capturedTrainLandmarks = results.multiHandLandmarks[0];
         document.getElementById('cam-hint').textContent = '✅ Hand detected! Click Capture';
       } else {
-        ctx.restore();
         capturedTrainLandmarks = null;
         document.getElementById('cam-hint').textContent = '✋ Show your hand gesture clearly';
       }
@@ -434,22 +428,17 @@ async function toggleGestureDetection() {
 
     Detector.hands.onResults((results) => {
       const ctx = localCanvas.getContext('2d');
-      // Match canvas to actual displayed video dimensions (not raw resolution)
-      // This fixes the 2cm offset bug caused by object-fit scaling
-      localCanvas.width = localVid.videoWidth || 640;
-      localCanvas.height = localVid.videoHeight || 480;
+      // KEY FIX: set canvas pixels to match the element's displayed size
+      // NOT the raw video resolution — this stops the enlargement bug
+      localCanvas.width = localCanvas.offsetWidth;
+      localCanvas.height = localCanvas.offsetHeight;
       ctx.clearRect(0, 0, localCanvas.width, localCanvas.height);
-      // Mirror the canvas to match mirrored video
-      ctx.save();
-      ctx.scale(-1, 1);
-      ctx.translate(-localCanvas.width, 0);
 
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         for (const lm of results.multiHandLandmarks) {
           drawConnectors(ctx, lm, HAND_CONNECTIONS, { color: '#7c6dfa', lineWidth: 2 });
           drawLandmarks(ctx, lm, { color: '#6dfabc', radius: 3 });
         }
-        ctx.restore();
         const matched = Detector._matchGesture(results.multiHandLandmarks[0]);
         if (matched && !gestureCooldown) {
           gestureCooldown = true;
@@ -457,9 +446,6 @@ async function toggleGestureDetection() {
           document.getElementById('detected-text').textContent = matched;
           Call.sendGesture(matched);
         }
-      } else {
-        ctx.restore();
-        ctx.clearRect(0, 0, localCanvas.width, localCanvas.height);
       }
     });
 
