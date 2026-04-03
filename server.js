@@ -1,14 +1,10 @@
 // server.js
-// Simple Node.js server to host the HandSpeak app on Render (free tier)
-// All the AI and video call logic runs in the browser — this just serves the files
-
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
 const PORT = process.env.PORT || 3000;
 
-// Map file extensions to content types
 const MIME_TYPES = {
   '.html': 'text/html',
   '.css':  'text/css',
@@ -21,46 +17,53 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer((req, res) => {
-  // Clean up URL
-  let urlPath = req.url.split('?')[0]; // remove query strings
-  if (urlPath === '/') urlPath = '/index.html';
+  let urlPath = req.url.split('?')[0];
 
+  // Always serve index.html for root
+  if (urlPath === '/' || urlPath === '') {
+    urlPath = '/index.html';
+  }
+
+  // Build full file path — __dirname is the folder where server.js lives
   const filePath = path.join(__dirname, urlPath);
-  const ext = path.extname(filePath);
-  const contentType = MIME_TYPES[ext] || 'text/plain';
+
+  console.log('Request:', urlPath, '→', filePath);
 
   fs.readFile(filePath, (err, data) => {
     if (err) {
-      if (err.code === 'ENOENT') {
-        // File not found — serve index.html (single page app)
-        fs.readFile(path.join(__dirname, 'index.html'), (err2, data2) => {
-          if (err2) {
-            res.writeHead(500);
-            res.end('Server error');
-          } else {
-            res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.end(data2);
-          }
+      console.log('File not found:', filePath, '— serving index.html');
+      // Serve index.html as fallback
+      const indexPath = path.join(__dirname, 'index.html');
+      fs.readFile(indexPath, (err2, indexData) => {
+        if (err2) {
+          res.writeHead(500, { 'Content-Type': 'text/plain' });
+          res.end('Server error — index.html not found. Check your files are uploaded.');
+          return;
+        }
+        res.writeHead(200, {
+          'Content-Type': 'text/html',
+          'Permissions-Policy': 'camera=*, microphone=*',
         });
-      } else {
-        res.writeHead(500);
-        res.end('Server error: ' + err.code);
-      }
+        res.end(indexData);
+      });
       return;
     }
 
+    const ext = path.extname(filePath);
+    const contentType = MIME_TYPES[ext] || 'text/plain';
+
     res.writeHead(200, {
       'Content-Type': contentType,
-      // Allow camera/mic access from HTTPS (required on Render)
       'Permissions-Policy': 'camera=*, microphone=*',
-      // Security headers
       'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'SAMEORIGIN',
     });
     res.end(data);
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`✅ HandSpeak server running on port ${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ SilentBridge running on port ${PORT}`);
+  console.log(`📁 Serving files from: ${__dirname}`);
+  // List all files in directory so we can debug
+  fs.readdirSync(__dirname).forEach(f => console.log(' -', f));
 });
