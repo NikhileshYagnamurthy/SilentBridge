@@ -588,3 +588,51 @@ input[type="text"]::placeholder { color: var(--text2); }
   transition: opacity 0.2s;
 }
 .copy-btn:hover { opacity: 0.85; }
+
+/* ── Built-in Gestures Section ── */
+.builtin-section {
+  background: var(--surface);
+  border: 1px solid rgba(124,109,250,0.25);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-top: 28px;
+}
+.builtin-header { margin-bottom: 16px; }
+.builtin-badge {
+  background: rgba(124,109,250,0.15);
+  border: 1px solid rgba(124,109,250,0.3);
+  color: var(--accent);
+  padding: 5px 14px;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+.builtin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+}
+.builtin-item {
+  background: var(--surface2);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-sm);
+  padding: 12px 8px;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+.builtin-item:hover { border-color: var(--accent); }
+.bi-emoji { font-size: 1.8rem; margin-bottom: 4px; }
+.bi-label { font-size: 0.72rem; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.bi-meaning { font-size: 0.68rem; color: var(--accent3); }
+
+.custom-section-header {
+  margin-top: 32px;
+  margin-bottom: 4px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.custom-section-header h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
