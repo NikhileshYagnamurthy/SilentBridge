@@ -1,0 +1,15 @@
+{
+  "name": "handspeak",
+  "version": "1.0.0",
+  "description": "Gesture-based video calls for people who cannot speak",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["gesture", "video-call", "mediapipe", "accessibility"],
+  "author": "HandSpeak",
+  "license": "MIT"
+}

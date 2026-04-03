@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HandSpeak – Gesture Video Calls</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- ═══════════ LANDING PAGE ═══════════ -->
+<div id="page-landing" class="page active">
+  <div class="bg-blobs">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+  </div>
+  <nav>
+    <div class="logo">🤟 HandSpeak</div>
+    <button class="btn-outline" onclick="showPage('page-train')">Train Gestures</button>
+  </nav>
+  <div class="hero">
+    <div class="badge">✨ Free &amp; Open — No Account Needed</div>
+    <h1>Speak with your<br/><span class="accent">hands.</span></h1>
+    <p class="sub">A video call platform for people who can't speak.<br/>Your gestures become text — in real time.</p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="showPage('page-room')">Start a Call</button>
+      <button class="btn-ghost" onclick="showPage('page-train')">Train My Gestures →</button>
+    </div>
+    <div class="how-it-works">
+      <div class="step"><div class="step-icon">🤚</div><div>You do a gesture</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="step-icon">🧠</div><div>AI detects it</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="step-icon">💬</div><div>Text appears for others</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ TRAIN PAGE ═══════════ -->
+<div id="page-train" class="page">
+  <div class="bg-blobs">
+    <div class="blob b1"></div><div class="blob b2"></div>
+  </div>
+  <nav>
+    <div class="logo" onclick="showPage('page-landing')" style="cursor:pointer">🤟 HandSpeak</div>
+    <button class="btn-outline" onclick="showPage('page-room')">Start Call</button>
+  </nav>
+  <div class="train-container">
+    <h2>Train Your Gestures</h2>
+    <p class="sub">Upload a photo of your hand gesture or use your live camera. Give each gesture a text label.</p>
+
+    <div class="train-card">
+      <div class="train-inputs">
+        <div class="input-group">
+          <label>What does this gesture mean?</label>
+          <input type="text" id="gesture-label" placeholder="e.g. Hello, Yes, No, Thank you, Help me" />
+        </div>
+        <div class="source-tabs">
+          <button class="tab active" id="tab-upload" onclick="switchTab('upload')">📁 Upload Photo</button>
+          <button class="tab" id="tab-camera" onclick="switchTab('camera')">📷 Live Camera</button>
+        </div>
+
+        <!-- Upload Mode -->
+        <div id="mode-upload">
+          <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+            <div class="drop-icon">🖼️</div>
+            <div>Click or drag a photo here</div>
+            <div class="drop-hint">Show your hand gesture clearly in good lighting</div>
+          </div>
+          <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFileUpload(event)"/>
+          <img id="preview-img" class="preview-img" style="display:none"/>
+        </div>
+
+        <!-- Camera Mode -->
+        <div id="mode-camera" style="display:none">
+          <div class="camera-wrap">
+            <video id="train-video" autoplay playsinline muted></video>
+            <canvas id="train-overlay" class="overlay-canvas"></canvas>
+            <div class="cam-hint" id="cam-hint">📸 Position your hand gesture in frame</div>
+          </div>
+          <button class="btn-secondary" id="cam-btn" onclick="toggleCamera()">▶ Start Camera</button>
+        </div>
+
+        <button class="btn-primary full-width" onclick="saveGesture()">💾 Save This Gesture</button>
+      </div>
+
+      <!-- Saved Gestures List -->
+      <div class="gestures-list">
+        <h3>Saved Gestures <span id="gesture-count" class="count-badge">0</span></h3>
+        <div id="gestures-grid"></div>
+        <div id="empty-state" class="empty-state">
+          <div style="font-size:2rem">🤷</div>
+          <div>No gestures yet. Add your first one!</div>
+          <div style="font-size:0.75rem;margin-top:4px">Tip: Start with simple gestures like thumbs up, open palm, peace sign</div>
+        </div>
+        <button class="btn-danger" id="clear-btn" onclick="clearAllGestures()" style="display:none">🗑️ Clear All</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ CALL/ROOM PAGE ═══════════ -->
+<div id="page-room" class="page">
+  <div class="bg-blobs dark">
+    <div class="blob b1"></div><div class="blob b2"></div>
+  </div>
+  <nav class="nav-dark">
+    <div class="logo" onclick="showPage('page-landing')" style="cursor:pointer">🤟 HandSpeak</div>
+    <div class="nav-center">
+      <span id="room-id-display" class="room-badge">No Room</span>
+    </div>
+    <button class="btn-outline" onclick="showPage('page-train')">Gestures</button>
+  </nav>
+
+  <!-- Room Setup Screen -->
+  <div class="room-setup" id="room-setup">
+    <h2>Join or Create a Room</h2>
+    <p class="sub">Create a room and share the Room ID with the person you want to call.<br/>They enter your Room ID to join.</p>
+    <div class="room-options">
+      <div class="room-card" onclick="createRoom()">
+        <div class="room-icon">➕</div>
+        <div class="room-label">Create New Room</div>
+        <div class="room-hint">Get a 6-letter Room ID to share</div>
+      </div>
+      <div class="room-divider">or</div>
+      <div class="room-join">
+        <label style="font-size:0.8rem;color:var(--text2);text-align:left;display:block;margin-bottom:6px">Enter Room ID from the other person</label>
+        <input type="text" id="join-room-input" placeholder="e.g. AB3DEF" maxlength="6" style="text-transform:uppercase;text-align:center;font-size:1.2rem;letter-spacing:4px"/>
+        <button class="btn-primary" onclick="joinRoom()">Join Room →</button>
+      </div>
+    </div>
+
+    <div class="setup-steps">
+      <div class="setup-step">
+        <span class="step-num">1</span>
+        <span>Person A clicks <b>Create New Room</b> → gets a Room ID</span>
+      </div>
+      <div class="setup-step">
+        <span class="step-num">2</span>
+        <span>Person A shares the Room ID (e.g. via WhatsApp)</span>
+      </div>
+      <div class="setup-step">
+        <span class="step-num">3</span>
+        <span>Person B enters Room ID → clicks <b>Join Room</b></span>
+      </div>
+      <div class="setup-step">
+        <span class="step-num">4</span>
+        <span>Person A clicks <b>🤚 Gestures</b> to start detecting</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Call UI -->
+  <div class="call-ui" id="call-ui" style="display:none">
+    <div class="videos-area">
+      <!-- Remote Video -->
+      <div class="video-box remote-box">
+        <video id="remote-video" autoplay playsinline></video>
+        <div class="video-label">Other Person</div>
+        <div class="remote-placeholder" id="remote-placeholder">
+          <div style="font-size:3rem">👤</div>
+          <div>Waiting for other person to join…</div>
+          <div class="share-box">
+            <div style="font-size:0.8rem;color:var(--text2);margin-bottom:6px">Share this Room ID:</div>
+            <div class="share-id-row">
+              <b id="share-room-id" class="share-id-text">—</b>
+              <button class="copy-btn" onclick="copyRoomId()">📋 Copy</button>
+            </div>
+            <div style="font-size:0.75rem;color:var(--text2);margin-top:6px">Send this to the other person via WhatsApp/text</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Local Video (you) -->
+      <div class="video-box local-box">
+        <video id="local-video" autoplay playsinline muted></video>
+        <canvas id="local-overlay" class="overlay-canvas"></canvas>
+        <div class="video-label">You</div>
+      </div>
+    </div>
+
+    <!-- Gesture Text Display -->
+    <div class="text-display" id="text-display">
+      <div class="text-display-header">
+        <span>💬 Detected Gesture Text</span>
+        <span id="gesture-status" class="status-dot offline">● Off</span>
+      </div>
+      <div class="detected-text" id="detected-text">—</div>
+      <div class="text-history" id="text-history"></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="call-controls">
+      <button class="ctrl-btn" id="btn-gesture" onclick="toggleGestureDetection()" title="Toggle gesture detection">
+        🤚<span>Gestures</span>
+      </button>
+      <button class="ctrl-btn" id="btn-cam" onclick="toggleCam()" title="Toggle camera">
+        📷<span>Camera</span>
+      </button>
+      <button class="ctrl-btn end-btn" onclick="endCall()" title="End call">
+        📵<span>End Call</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast"></div>
+
+<!-- ── Scripts ── -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script src="gesture-db.js"></script>
+<script src="detector.js"></script>
+<script src="call.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
