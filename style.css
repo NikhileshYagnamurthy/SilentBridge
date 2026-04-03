@@ -294,8 +294,9 @@ input[type="text"]::placeholder { color: var(--text2); }
   background: #000;
   aspect-ratio: 4/3;
 }
-.camera-wrap video, .camera-wrap canvas { width: 100%; height: 100%; object-fit: cover; }
-.overlay-canvas { position: absolute; top: 0; left: 0; }
+.camera-wrap video { width: 100%; height: 100%; object-fit: contain; display: block; }
+.camera-wrap canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 .cam-hint {
   position: absolute; bottom: 8px; left: 0; right: 0;
   text-align: center; font-size: 0.75rem;
@@ -423,7 +424,7 @@ input[type="text"]::placeholder { color: var(--text2); }
   overflow: hidden;
   border: 1px solid rgba(255,255,255,0.07);
 }
-.video-box video { width: 100%; height: 100%; object-fit: cover; }
+.video-box video { width: 100%; height: 100%; object-fit: contain; display: block; }
 .video-label {
   position: absolute; bottom: 10px; left: 12px;
   background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
