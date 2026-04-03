@@ -27,9 +27,12 @@ function showToast(msg, duration=3000) {
   t._t = setTimeout(() => t.classList.remove('show'), duration);
 }
 
-// ══════════════════════════════════
-// COPY ROOM ID
-// ══════════════════════════════════
+async function pushGesturesToServer() {
+  showToast('⏳ Pushing gestures to server…');
+  const ok = await GestureDB.pushToServer();
+  if (ok) showToast(`✅ Done! ${GestureDB.count()} gestures now available for everyone.`, 4000);
+  else showToast('❌ Could not reach server. Try again.');
+}
 function copyRoomId() {
   const id = document.getElementById('share-room-id').textContent;
   navigator.clipboard.writeText(id)
@@ -101,7 +104,11 @@ function clearPreview() {
 }
 
 // Drag and drop
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Auto-load gestures from server for everyone
+  const count = await GestureDB.loadFromServer();
+  if (count > 0) showToast(`✅ ${count} gestures loaded!`, 2000);
+
   const dz = document.getElementById('drop-zone');
   if (!dz) return;
   dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
@@ -321,16 +328,15 @@ async function startTrainCamera() {
     await Detector.init();
     Detector.hands.onResults((results) => {
       const ctx = canvas.getContext('2d');
-      // Match canvas pixels to displayed element size
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        for (const lm of results.multiHandLandmarks) {
-          drawConnectors(ctx, lm, HAND_CONNECTIONS, { color: '#7c6dfa', lineWidth: 2 });
-          drawLandmarks(ctx, lm, { color: '#fa6d9a', radius: 4 });
-        }
-        capturedTrainLandmarks = results.multiHandLandmarks[0];
+        // Mirror landmarks to match CSS-mirrored webcam
+        const mirrored = results.multiHandLandmarks[0].map(lm => ({ x: 1-lm.x, y: lm.y, z: lm.z }));
+        drawConnectors(ctx, mirrored, HAND_CONNECTIONS, { color: '#7c6dfa', lineWidth: 2 });
+        drawLandmarks(ctx, mirrored, { color: '#fa6d9a', radius: 4 });
+        capturedTrainLandmarks = results.multiHandLandmarks[0]; // save original (not mirrored) for matching
         document.getElementById('cam-hint').textContent = '✅ Hand detected! Click Capture';
       } else {
         capturedTrainLandmarks = null;
@@ -428,17 +434,21 @@ async function toggleGestureDetection() {
 
     Detector.hands.onResults((results) => {
       const ctx = localCanvas.getContext('2d');
-      // KEY FIX: set canvas pixels to match the element's displayed size
-      // NOT the raw video resolution — this stops the enlargement bug
       localCanvas.width = localCanvas.offsetWidth;
       localCanvas.height = localCanvas.offsetHeight;
       ctx.clearRect(0, 0, localCanvas.width, localCanvas.height);
 
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        for (const lm of results.multiHandLandmarks) {
-          drawConnectors(ctx, lm, HAND_CONNECTIONS, { color: '#7c6dfa', lineWidth: 2 });
-          drawLandmarks(ctx, lm, { color: '#6dfabc', radius: 3 });
-        }
+        // Mirror landmarks horizontally to match the CSS-mirrored video
+        const mirrored = results.multiHandLandmarks[0].map(lm => ({
+          x: 1 - lm.x,   // flip X axis
+          y: lm.y,
+          z: lm.z
+        }));
+        const mirroredAll = [mirrored];
+        drawConnectors(ctx, mirrored, HAND_CONNECTIONS, { color: '#7c6dfa', lineWidth: 2 });
+        drawLandmarks(ctx, mirrored, { color: '#6dfabc', radius: 3 });
+
         const matched = Detector._matchGesture(results.multiHandLandmarks[0]);
         if (matched && !gestureCooldown) {
           gestureCooldown = true;
