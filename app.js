@@ -289,7 +289,7 @@ async function startTrainCamera() {
     await Detector.init();
 
     Detector.hands.onResults(results => {
-      // Use the shared draw function — keeps dots aligned correctly
+      // Use shared draw function — handles mirroring correctly
       Detector._drawOnCanvas(canvas, vid, results.multiHandLandmarks);
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         capturedTrainLandmarks = results.multiHandLandmarks[0];
