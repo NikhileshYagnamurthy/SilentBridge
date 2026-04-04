@@ -9,6 +9,7 @@ const Call = {
   isHost: false,
   dataConn: null,
   camEnabled: true,
+  micEnabled: true,
 
   async getLocalStream() {
     try {
@@ -206,6 +207,18 @@ const Call = {
     return this.camEnabled;
   },
 
+  toggleMic() {
+    if (this.localStream) {
+      const track = this.localStream.getAudioTracks()[0];
+      if (track) {
+        this.micEnabled = !this.micEnabled;
+        track.enabled = this.micEnabled;
+        return this.micEnabled;
+      }
+    }
+    return this.micEnabled;
+  },
+
   end() {
     try { if (this.currentCall) this.currentCall.close(); } catch(e) {}
     try { if (this.dataConn) this.dataConn.close(); } catch(e) {}
@@ -213,7 +226,7 @@ const Call = {
     if (this.localStream) this.localStream.getTracks().forEach(t => t.stop());
     this.peer = null; this.localStream = null;
     this.currentCall = null; this.dataConn = null;
-    this.roomId = null; this.camEnabled = true;
+    this.roomId = null; this.camEnabled = true; this.micEnabled = true;
   },
 
   _generateRoomId() {
