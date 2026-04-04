@@ -1,4 +1,4 @@
-// detector.js
+// detector.js — Final clean version
 
 const Detector = {
   hands: null,
@@ -7,8 +7,7 @@ const Detector = {
   activeVideo: null,
   onGesture: null,
   _initialized: false,
-  _sending: false,       // prevents overlapping MediaPipe calls (fixes stuck/cluster bug)
-  _lastLabel: null,
+  _busy: false,
   _cooldown: false,
 
   async init() {
@@ -19,170 +18,128 @@ const Detector = {
     this.hands.setOptions({
       maxNumHands: 1,
       modelComplexity: 1,
-      minDetectionConfidence: 0.75,
-      minTrackingConfidence: 0.6
+      minDetectionConfidence: 0.7,
+      minTrackingConfidence: 0.5
     });
     this.hands.onResults(r => this._onResults(r));
     await this.hands.initialize();
     this._initialized = true;
   },
 
-  stop() {
-    this.isRunning = false;
-    this.activeCanvas = null;
-    this.activeVideo  = null;
-    this._sending     = false;
-  },
-
-  // ── Start detection loop on a video element ──
+  // ── Start detection on a live video (for call) ──
   startLoop(videoEl, canvasEl, onGesture) {
     this.activeVideo  = videoEl;
     this.activeCanvas = canvasEl;
     this.onGesture    = onGesture;
     this.isRunning    = true;
-    this._loop();
+    this._runLoop();
   },
 
-  async _loop() {
+  async _runLoop() {
     if (!this.isRunning) return;
-
     const vid = this.activeVideo;
-    // Only send if video has real frames and we aren't already waiting
-    if (vid && vid.readyState >= 2 && !vid.paused && !this._sending) {
-      this._sending = true;
-      try {
-        await this.hands.send({ image: vid });
-      } catch(e) {
-        // ignore frame errors
-      }
-      this._sending = false;
+    if (vid && vid.readyState >= 2 && !vid.paused && !this._busy) {
+      this._busy = true;
+      try { await this.hands.send({ image: vid }); } catch(e) {}
+      this._busy = false;
     }
-
-    // ~20fps — enough for smooth detection without overloading
-    setTimeout(() => this._loop(), 50);
+    setTimeout(() => this._runLoop(), 60); // ~16fps
   },
 
-  // ── Process one static image (for training) ──
+  stop() {
+    this.isRunning    = false;
+    this.activeCanvas = null;
+    this.activeVideo  = null;
+    this.onGesture    = null;
+    this._busy        = false;
+    this._cooldown    = false;
+  },
+
+  // ── Process one image for training ──
   async processImage(imgEl) {
     if (!this._initialized) await this.init();
     return new Promise(resolve => {
-      const saved = this.hands._userResultCallback;
       this.hands.onResults(results => {
         this.hands.onResults(r => this._onResults(r)); // restore
-        resolve(
-          results.multiHandLandmarks?.length > 0
-            ? results.multiHandLandmarks[0]
-            : null
-        );
+        resolve(results.multiHandLandmarks?.length > 0
+          ? results.multiHandLandmarks[0] : null);
       });
       this.hands.send({ image: imgEl }).catch(() => resolve(null));
     });
   },
 
-  // ── Called after every frame ──
   _onResults(results) {
-    this._drawDots(results.multiHandLandmarks);
-
+    // Draw dots on call canvas
+    if (this.activeCanvas && this.activeVideo) {
+      this._draw(this.activeCanvas, this.activeVideo, results.multiHandLandmarks);
+    }
     if (!results.multiHandLandmarks?.length) return;
-
-    if (!this._cooldown) {
-      const label = this._matchGesture(results.multiHandLandmarks[0]);
-      if (label && this.onGesture) {
-        this.onGesture(label);
-        this._cooldown = true;
-        setTimeout(() => { this._cooldown = false; }, 1500);
-      }
+    if (this._cooldown) return;
+    const label = this._matchGesture(results.multiHandLandmarks[0]);
+    if (label && this.onGesture) {
+      this.onGesture(label);
+      this._cooldown = true;
+      setTimeout(() => { this._cooldown = false; }, 1500);
     }
   },
 
-  // ── Draw skeleton dots on canvas ──
-  // Strategy: set canvas pixels = video natural size
-  //           CSS makes canvas fill the box
-  //           mirror via ctx.scale so dots align with CSS-mirrored video
-  _drawDots(landmarksList) {
-    const canvas = this.activeCanvas;
-    const video  = this.activeVideo;
-    if (!canvas || !video) return;
-
+  // ── THE KEY FIX ──
+  // video has CSS: transform scaleX(-1)  → video appears mirrored on screen
+  // canvas has NO CSS transform           → canvas coords are unmirrored
+  // MediaPipe gives coords in RAW (unmirrored) space
+  // So we draw at (1 - lm.x) to flip the dots to match the mirrored video
+  _draw(canvas, video, landmarksList) {
     const vw = video.videoWidth  || 640;
     const vh = video.videoHeight || 480;
-
-    // Only resize canvas if size actually changed — avoids flicker/cluster bug
-    if (canvas.width !== vw || canvas.height !== vh) {
-      canvas.width  = vw;
-      canvas.height = vh;
-    }
-
+    if (canvas.width !== vw)  canvas.width  = vw;
+    if (canvas.height !== vh) canvas.height = vh;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, vw, vh);
-
     if (!landmarksList?.length) return;
-
-    // Mirror drawing to match scaleX(-1) on the video element
-    ctx.save();
-    ctx.translate(vw, 0);
-    ctx.scale(-1, 1);
-
     for (const lm of landmarksList) {
-      drawConnectors(ctx, lm, HAND_CONNECTIONS, { color: '#7c6dfa', lineWidth: 2 });
-      drawLandmarks(ctx, lm, { color: '#6dfabc', lineWidth: 1, radius: 4 });
+      // Flip X to match CSS-mirrored video
+      const flipped = lm.map(p => ({ x: 1 - p.x, y: p.y, z: p.z }));
+      drawConnectors(ctx, flipped, HAND_CONNECTIONS, { color: '#7c6dfa', lineWidth: 2 });
+      drawLandmarks(ctx,  flipped, { color: '#6dfabc', lineWidth: 1, radius: 5 });
     }
-
-    ctx.restore();
   },
 
-  // ── Also expose _drawOnCanvas so app.js training camera can use it ──
-  _drawOnCanvas(canvas, video, landmarksList) {
-    const prev = [this.activeCanvas, this.activeVideo];
-    this.activeCanvas = canvas;
-    this.activeVideo  = video;
-    this._drawDots(landmarksList);
-    [this.activeCanvas, this.activeVideo] = prev;
+  // Used by training camera in app.js
+  drawOnCanvas(canvas, video, landmarksList) {
+    this._draw(canvas, video, landmarksList);
   },
 
-  // ── Match live hand against saved gestures ──
   _matchGesture(rawLm) {
     const gestures = GestureDB.getAll();
     if (!gestures.length) return null;
-
     const normVec = this._flatten(this._normalize(rawLm));
     let bestLabel = null, bestScore = 0;
     const THRESHOLD = 0.96;
-
     for (const g of gestures) {
       if (!g.landmarks) continue;
-      const samples = Array.isArray(g.landmarks[0]) && typeof g.landmarks[0][0] === 'object'
+      const samples = (Array.isArray(g.landmarks[0]) && typeof g.landmarks[0][0] === 'object')
         ? g.landmarks : [g.landmarks];
-      for (const sample of samples) {
+      for (const s of samples) {
         const vec = this._flatten(this._normalize(
-          sample.map(lm => Array.isArray(lm) ? { x: lm[0], y: lm[1], z: lm[2] } : lm)
+          s.map(p => Array.isArray(p) ? {x:p[0],y:p[1],z:p[2]} : p)
         ));
-        const score = this._cosineSim(normVec, vec);
-        if (score > bestScore) { bestScore = score; bestLabel = g.label; }
+        const sc = this._cosineSim(normVec, vec);
+        if (sc > bestScore) { bestScore = sc; bestLabel = g.label; }
       }
     }
     return bestScore >= THRESHOLD ? bestLabel : null;
   },
 
   _normalize(lms) {
-    let minX=1, minY=1, maxX=0, maxY=0;
-    for (const l of lms) {
-      minX=Math.min(minX,l.x); minY=Math.min(minY,l.y);
-      maxX=Math.max(maxX,l.x); maxY=Math.max(maxY,l.y);
-    }
-    const rx=maxX-minX||1, ry=maxY-minY||1;
-    return lms.map(l => ({ x:(l.x-minX)/rx, y:(l.y-minY)/ry, z:l.z }));
+    let x0=1,y0=1,x1=0,y1=0;
+    for (const p of lms) { x0=Math.min(x0,p.x); y0=Math.min(y0,p.y); x1=Math.max(x1,p.x); y1=Math.max(y1,p.y); }
+    const rx=x1-x0||1, ry=y1-y0||1;
+    return lms.map(p=>({x:(p.x-x0)/rx, y:(p.y-y0)/ry, z:p.z}));
   },
-
-  _flatten(lms) {
-    const v = [];
-    for (const l of lms) v.push(l.x, l.y, l.z);
-    return v;
-  },
-
-  _cosineSim(a, b) {
-    let dot=0, nA=0, nB=0;
-    for (let i=0; i<a.length; i++) { dot+=a[i]*b[i]; nA+=a[i]*a[i]; nB+=b[i]*b[i]; }
-    return (nA&&nB) ? dot/(Math.sqrt(nA)*Math.sqrt(nB)) : 0;
+  _flatten(lms) { const v=[]; for(const p of lms) v.push(p.x,p.y,p.z); return v; },
+  _cosineSim(a,b) {
+    let d=0,na=0,nb=0;
+    for(let i=0;i<a.length;i++){d+=a[i]*b[i];na+=a[i]*a[i];nb+=b[i]*b[i];}
+    return (na&&nb)?d/(Math.sqrt(na)*Math.sqrt(nb)):0;
   }
 };
