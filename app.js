@@ -415,6 +415,14 @@ function toggleCam() {
   showToast(enabled ? '📷 Camera on' : '🚫 Camera off');
 }
 
+function toggleMic() {
+  const btn     = document.getElementById('btn-mic');
+  const enabled = Call.toggleMic();
+  btn.classList.toggle('active', !enabled);
+  btn.innerHTML = (enabled?'🎤':'🔇')+'<span>Mic</span>';
+  showToast(enabled ? '🎤 Mic on' : '🔇 Mic muted');
+}
+
 function endCall() {
   if (!confirm('End the call?')) return;
   Detector.stop(); gestureDetectionOn = false; Call.end();
@@ -429,6 +437,8 @@ function endCall() {
   document.getElementById('btn-gesture').classList.remove('active');
   document.getElementById('btn-cam').classList.remove('active');
   document.getElementById('btn-cam').innerHTML = '📷<span>Camera</span>';
+  document.getElementById('btn-mic').classList.remove('active');
+  document.getElementById('btn-mic').innerHTML = '🎤<span>Mic</span>';
   document.getElementById('remote-placeholder').style.display = 'flex';
   showToast('📵 Call ended');
 }
