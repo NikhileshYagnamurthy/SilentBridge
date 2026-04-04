@@ -286,12 +286,13 @@ async function startTrainCamera() {
     await vid.play().catch(()=>{});
     trainCameraRunning = true;
     document.getElementById('cam-btn').textContent = '⏹ Stop Camera';
+
     await Detector.init();
 
+    // Override onResults just for training camera
     Detector.hands.onResults(results => {
-      // Use shared draw function — handles mirroring correctly
       Detector._drawOnCanvas(canvas, vid, results.multiHandLandmarks);
-      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+      if (results.multiHandLandmarks?.length > 0) {
         capturedTrainLandmarks = results.multiHandLandmarks[0];
         document.getElementById('cam-hint').textContent = '✅ Hand detected! Click Capture';
       } else {
@@ -300,12 +301,18 @@ async function startTrainCamera() {
       }
     });
 
+    // Simple loop for training camera
     const loop = async () => {
       if (!trainCameraRunning) return;
-      if (vid.readyState >= 2) { try { await Detector.hands.send({ image: vid }); } catch(e){} }
-      requestAnimationFrame(loop);
+      if (vid.readyState >= 2 && !vid.paused && !Detector._sending) {
+        Detector._sending = true;
+        try { await Detector.hands.send({ image: vid }); } catch(e) {}
+        Detector._sending = false;
+      }
+      setTimeout(loop, 80);
     };
     loop();
+
   } catch(e) { showToast('❌ Camera access denied'); }
 }
 
@@ -358,53 +365,49 @@ async function toggleGestureDetection() {
   const status = document.getElementById('gesture-status');
 
   if (gestureDetectionOn) {
-    Detector.stop(); gestureDetectionOn = false;
+    Detector.stop();
+    gestureDetectionOn = false;
     btn.classList.remove('active');
-    status.textContent = '● Off'; status.className = 'status-dot offline';
-    showToast('✋ Gestures off'); return;
+    status.textContent = '● Off';
+    status.className = 'status-dot offline';
+    // Clear canvas
+    const c = document.getElementById('local-overlay');
+    if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height);
+    showToast('✋ Gestures off');
+    return;
   }
 
   if (GestureDB.count() === 0) { showToast('⚠️ No gestures! Add some in Gesture Library.'); return; }
   if (!Call.localStream)       { showToast('⚠️ Start a call first.'); return; }
 
   try {
+    showToast('⏳ Starting gesture detector…');
     await Detector.init();
+
     const localVid    = document.getElementById('local-video');
     const localCanvas = document.getElementById('local-overlay');
 
-    Detector.activeCanvas = localCanvas;
-    Detector.activeVideo  = localVid;
-    Detector.isRunning    = true;
-
-    Detector.hands.onResults(results => {
-      // Dots drawn via shared _drawOnCanvas — correct size, correct mirror
-      Detector._drawOnCanvas(localCanvas, localVid, results.multiHandLandmarks);
-
-      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        const matched = Detector._matchGesture(results.multiHandLandmarks[0]);
-        if (matched && !gestureCooldown) {
-          gestureCooldown = true;
-          setTimeout(() => { gestureCooldown = false; }, 1500);
-          document.getElementById('detected-text').textContent = matched;
-          Call.sendGesture(matched);
-        }
-      }
+    // startLoop handles everything — no manual loops needed
+    Detector.startLoop(localVid, localCanvas, (label) => {
+      document.getElementById('detected-text').textContent = label;
+      const history = document.getElementById('text-history');
+      const chip = document.createElement('div');
+      chip.className = 'history-chip';
+      chip.textContent = label;
+      history.prepend(chip);
+      while (history.children.length > 10) history.removeChild(history.lastChild);
+      Call.sendGesture(label);
     });
-
-    const loop = async () => {
-      if (!Detector.isRunning) return;
-      if (localVid.readyState >= 2 && !localVid.paused) {
-        try { await Detector.hands.send({ image: localVid }); } catch(e) {}
-      }
-      requestAnimationFrame(loop);
-    };
-    loop();
 
     gestureDetectionOn = true;
     btn.classList.add('active');
-    status.textContent = '● Detecting'; status.className = 'status-dot online';
-    showToast('🤚 Gestures ON!');
-  } catch(e) { showToast('❌ Error: ' + e.message); }
+    status.textContent = '● Detecting';
+    status.className = 'status-dot online';
+    showToast('🤚 Gestures ON! Do your hand gestures.');
+  } catch(e) {
+    console.error('Gesture detection error:', e);
+    showToast('❌ Error starting gestures: ' + e.message);
+  }
 }
 
 function toggleCam() {
