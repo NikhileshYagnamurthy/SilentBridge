@@ -1,55 +1,73 @@
 // gesture-db.js
-// HOW IT WORKS:
-//   - On page load: fetches gestures from server (/api/gestures) → everyone gets same gestures
-//   - When you save a gesture: saves locally AND pushes to server
-//   - Other visitors: automatically get your gestures when they open the site
+// Loads gestures from server on startup → works on ALL devices automatically
+// Images are stored locally only (too large for server)
+// Landmarks (the math points) are stored on server → shared for everyone
 
 const GestureDB = {
   LOCAL_KEY: 'silentbridge_gestures_v2',
   _cache: null,
 
-  // ── Load gestures (server first, localStorage fallback) ──
+  // ── Load from server on startup ──
   async loadFromServer() {
     try {
       const res = await fetch('/api/gestures');
       if (!res.ok) throw new Error('Server error');
       const serverGestures = await res.json();
+
       if (Array.isArray(serverGestures) && serverGestures.length > 0) {
-        // Save to localStorage as cache
-        localStorage.setItem(this.LOCAL_KEY, JSON.stringify(serverGestures));
-        this._cache = serverGestures;
-        console.log(`✅ Loaded ${serverGestures.length} gestures from server`);
-        return serverGestures.length;
+        // Merge server gestures with any local images we have
+        // Server has landmarks, local storage has the preview images
+        const local = this._readLocal();
+        const merged = serverGestures.map(sg => {
+          const localMatch = local.find(lg => lg.id === sg.id);
+          return {
+            ...sg,
+            // Use local images if available, otherwise no image (still works!)
+            imageData: (localMatch && localMatch.imageData) || sg.imageData || []
+          };
+        });
+        this._cache = merged;
+        // Save merged version locally
+        localStorage.setItem(this.LOCAL_KEY, JSON.stringify(merged));
+        console.log(`✅ Loaded ${merged.length} gestures from server`);
+        return merged.length;
       }
     } catch(e) {
-      console.warn('Could not reach server, using localStorage:', e.message);
+      console.warn('Server load failed, using localStorage:', e.message);
     }
-    // Fallback: localStorage
+    // Fallback to local storage
     this._cache = this._readLocal();
     return this._cache.length;
   },
 
-  // ── Push all local gestures to server ──
+  // ── Push to server — landmarks only, NO images (images are too large) ──
   async pushToServer() {
     const all = this.getAll();
+    // Strip image data before sending — landmarks are enough for detection
+    const slim = all.map(g => ({
+      id: g.id,
+      label: g.label,
+      landmarks: g.landmarks,
+      sampleCount: g.sampleCount || 1
+      // imageData intentionally excluded — too large, stays local only
+    }));
     try {
       const res = await fetch('/api/gestures', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(all)
+        body: JSON.stringify(slim)
       });
       const result = await res.json();
       if (result.ok) {
-        console.log(`✅ Pushed ${result.count} gestures to server`);
+        console.log(`✅ Pushed ${result.count} gestures to server (landmarks only)`);
         return true;
       }
     } catch(e) {
-      console.error('Could not push to server:', e.message);
+      console.error('Push failed:', e.message);
     }
     return false;
   },
 
-  // ── Get all gestures (from cache) ──
   getAll() {
     if (this._cache) return this._cache;
     this._cache = this._readLocal();
@@ -66,14 +84,14 @@ const GestureDB = {
     localStorage.setItem(this.LOCAL_KEY, JSON.stringify(all));
   },
 
-  // ── Add a sample to existing label OR create new gesture ──
   async addSample(label, landmarkArray, imageDataUrl) {
     const all = this.getAll();
     const existing = all.find(g => g.label.toLowerCase() === label.toLowerCase());
     if (existing) {
+      // Normalize to multi-sample format
       if (!Array.isArray(existing.landmarks[0]) || typeof existing.landmarks[0][0] !== 'object') {
         existing.landmarks = [existing.landmarks];
-        existing.imageData = [existing.imageData];
+        existing.imageData = Array.isArray(existing.imageData) ? existing.imageData : [existing.imageData];
       }
       existing.landmarks.push(landmarkArray);
       existing.imageData.push(imageDataUrl);
@@ -88,7 +106,7 @@ const GestureDB = {
       });
     }
     this._saveLocal(all);
-    // Auto-push to server so everyone gets it
+    // Auto push landmarks to server
     await this.pushToServer();
   },
 
@@ -108,10 +126,26 @@ const GestureDB = {
   totalSamples() { return this.getAll().reduce((s,g) => s+(g.sampleCount||1), 0); },
 
   exportToFile() {
+    // Export full version with images for backup
     const blob = new Blob([JSON.stringify(this.getAll(), null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'silentbridge-gestures.json';
+    a.click();
+  },
+
+  // Export slim version (landmarks only) for committing to GitHub
+  exportSlimForGithub() {
+    const all = this.getAll();
+    const slim = all.map(g => ({
+      id: g.id, label: g.label,
+      landmarks: g.landmarks,
+      sampleCount: g.sampleCount || 1
+    }));
+    const blob = new Blob([JSON.stringify(slim, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'gestures.json';
     a.click();
   },
 
