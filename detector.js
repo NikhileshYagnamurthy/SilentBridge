@@ -48,16 +48,9 @@ const Detector = {
     });
   },
 
-  // ── Draw dots correctly on canvas ──
-  // The key fix: canvas pixel size = video's NATURAL resolution
-  // Canvas CSS size = video element's displayed size
-  // MediaPipe landmarks are 0-1 ratios of the natural video frame
-  // So drawing at (lm.x * canvas.width) works perfectly
   _drawOnCanvas(canvas, video, landmarks) {
     if (!canvas || !video) return;
 
-    // Set canvas PIXEL size to match the VIDEO's natural resolution
-    // This makes landmark coordinates (0-1) map correctly to canvas pixels
     const vw = video.videoWidth  || 640;
     const vh = video.videoHeight || 480;
     canvas.width  = vw;
@@ -66,13 +59,14 @@ const Detector = {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, vw, vh);
 
-    if (landmarks && landmarks.length > 0) {
-      for (const lm of landmarks) {
-        // Mirror X because webcam video has scaleX(-1) CSS transform
-        const mirrored = lm.map(p => ({ x: 1 - p.x, y: p.y, z: p.z }));
-        drawConnectors(ctx, mirrored, HAND_CONNECTIONS, { color: '#7c6dfa', lineWidth: 3 });
-        drawLandmarks(ctx, mirrored, { color: '#6dfabc', lineWidth: 1, radius: 5 });
-      }
+    if (!landmarks || !landmarks.length) return;
+
+    // Draw landmarks at raw MediaPipe coordinates (no JS flipping)
+    // CSS transform: scaleX(-1) on both video and canvas handles the mirror
+    // so dots appear exactly on top of the hand as seen on screen
+    for (const lm of landmarks) {
+      drawConnectors(ctx, lm, HAND_CONNECTIONS, { color: '#7c6dfa', lineWidth: 3 });
+      drawLandmarks(ctx, lm, { color: '#6dfabc', lineWidth: 1, radius: 5 });
     }
   },
 
