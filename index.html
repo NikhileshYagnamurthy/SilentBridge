@@ -56,9 +56,9 @@
     <!-- Import / Export buttons -->
     <div class="import-export-row">
       <button class="btn-primary small-btn" onclick="pushGesturesToServer()">☁️ Push to Server</button>
+      <button class="btn-outline small-btn" onclick="downloadForGithub()">📦 Save for GitHub</button>
       <button class="btn-outline small-btn" onclick="document.getElementById('import-input').click()">📥 Import</button>
       <input type="file" id="import-input" accept=".json" style="display:none" onchange="importGestures(event)"/>
-      <button class="btn-outline small-btn" onclick="GestureDB.exportToFile(); showToast('📥 Exported!')">📤 Export</button>
       <button class="btn-danger small-btn" onclick="clearAllGestures()">🗑️ Clear All</button>
     </div>
 
